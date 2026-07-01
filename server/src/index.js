@@ -11,7 +11,20 @@ import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // non-browser clients (curl, server-to-server)
+  if (origin === process.env.CLIENT_URL) return true;
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) return true; // any Vercel preview/production URL
+  return false;
+};
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      callback(null, isAllowedOrigin(origin));
+    },
+  })
+);
 app.use(express.json());
 app.use(morgan("dev"));
 
